@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PickleBallBooking.Services", "PickleBallBooking.Services\PickleBallBooking.Services.csproj", "{A9721F27-E06A-47DF-81C4-E4312D95AA1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PickleBallBooking.Repositories", "PickleBallBooking.Repositories\PickleBallBooking.Repositories.csproj", "{72F71419-F16E-43E1-842B-18BC5E146429}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PickleBallBooking.API", "PickleBallBooking.API\PickleBallBooking.API.csproj", "{BB674791-AE08-4355-BEAE-FEE093E241F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PickleBallBooking.Domain", "PickleBallBooking.Domain\PickleBallBooking.Domain.csproj", "{BB904A11-07B8-4992-9478-A29CB4634CBC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7853929E-7641-4D42-8349-BB6209256017}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yaml = docker-compose.yaml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A9721F27-E06A-47DF-81C4-E4312D95AA1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9721F27-E06A-47DF-81C4-E4312D95AA1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9721F27-E06A-47DF-81C4-E4312D95AA1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9721F27-E06A-47DF-81C4-E4312D95AA1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72F71419-F16E-43E1-842B-18BC5E146429}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72F71419-F16E-43E1-842B-18BC5E146429}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72F71419-F16E-43E1-842B-18BC5E146429}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72F71419-F16E-43E1-842B-18BC5E146429}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB674791-AE08-4355-BEAE-FEE093E241F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB674791-AE08-4355-BEAE-FEE093E241F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB674791-AE08-4355-BEAE-FEE093E241F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB674791-AE08-4355-BEAE-FEE093E241F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB904A11-07B8-4992-9478-A29CB4634CBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB904A11-07B8-4992-9478-A29CB4634CBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB904A11-07B8-4992-9478-A29CB4634CBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB904A11-07B8-4992-9478-A29CB4634CBC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
