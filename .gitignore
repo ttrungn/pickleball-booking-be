@@ -488,3 +488,6 @@ $RECYCLE.BIN/
 
 # But keep the example template
 !**/appsettings.example.json
+
+# local files
+project-structure.txt
