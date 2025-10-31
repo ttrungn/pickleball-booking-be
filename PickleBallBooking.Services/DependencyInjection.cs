@@ -1,5 +1,7 @@
 using System.Reflection;
+using Azure.Storage.Blobs;
 using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PickleBallBooking.Services.Behaviours;
@@ -20,8 +22,20 @@ public static class DependencyInjection
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
             cfg.AddOpenBehavior(typeof(ValidationBehaviour<,>));
         });
+
+        // jwt settings
         var jwtSettings = builder.Configuration.GetSection("JwtSettings");
         builder.Services.Configure<JwtSettings>(jwtSettings);
+
+        // blob settings
+        var blobSettings = builder.Configuration.GetSection("Azure:BlobStorageSettings");
+        var blobConnectionString = blobSettings.GetValue<string>("ConnectionString");
+        builder.Services.Configure<BlobSettings>(blobSettings);
+        builder.Services.AddSingleton(new BlobServiceClient(blobConnectionString));
+
+        // register services
         builder.Services.AddScoped<ITokenService, TokenService>();
+        builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
+        builder.Services.AddScoped<IFieldService, FieldService>();
     }
 }

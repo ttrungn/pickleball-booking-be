@@ -959,6 +959,16 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     }
 
     /// <summary>
+    ///     Updates the specified entity.
+    /// </summary>
+    /// <param name="entity">The entity.</param>
+    public virtual Task UpdateAsync(TEntity entity)
+    {
+        _dbSet.Update(entity);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     ///     Deletes the specified entity.
     /// </summary>
     /// <param name="entity">The entity to delete.</param>
@@ -1147,12 +1157,5 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
         return _dbSet;
     }
 
-    /// <summary>
-    ///     Updates the specified entity.
-    /// </summary>
-    /// <param name="entity">The entity.</param>
-    public virtual void UpdateAsync(TEntity entity)
-    {
-        _dbSet.Update(entity);
-    }
+
 }
