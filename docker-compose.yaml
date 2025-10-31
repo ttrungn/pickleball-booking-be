@@ -33,8 +33,7 @@
     restart: "no"
     command: >
       bash -c '
-      /opt/mssql-tools18/bin/sqlcmd -C -S sqlserver -U sa -P ${SA_PASSWORD:-12345aA#} -d master -i SQLServerInit/init.sql;
-      '
+      /opt/mssql-tools18/bin/sqlcmd -C -S sqlserver -U sa -P ${SA_PASSWORD:-12345aA#} -d master -i SQLServerInit/init.sql;'
   
   api:
     build:
