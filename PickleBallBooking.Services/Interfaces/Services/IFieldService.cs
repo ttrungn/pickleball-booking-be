@@ -4,6 +4,7 @@ using PickleBallBooking.Services.Features.Fields.Commands.UpdateField;
 using PickleBallBooking.Services.Features.Fields.Queries.GetFieldById;
 using PickleBallBooking.Services.Features.Fields.Queries.GetFields;
 using PickleBallBooking.Services.Models.Responses;
+using PickleBallBooking.Services.Models.Responses.Fields;
 
 namespace PickleBallBooking.Services.Interfaces.Services;
 

@@ -1,4 +1,4 @@
-﻿namespace PickleBallBooking.Services.Models.Requests;
+﻿namespace PickleBallBooking.Services.Models.Requests.Fields;
 
 public class FieldGetRequest
 {

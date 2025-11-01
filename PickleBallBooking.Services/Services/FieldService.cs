@@ -10,6 +10,7 @@ using PickleBallBooking.Services.Features.Fields.Queries.GetFields;
 using PickleBallBooking.Services.Interfaces.Services;
 using PickleBallBooking.Services.Models.Configurations;
 using PickleBallBooking.Services.Models.Responses;
+using PickleBallBooking.Services.Models.Responses.Fields;
 
 namespace PickleBallBooking.Services.Services;
 

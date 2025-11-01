@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using PickleBallBooking.Services.Interfaces.Services;
 using PickleBallBooking.Services.Models.Responses;
+using PickleBallBooking.Services.Models.Responses.Fields;
 
 namespace PickleBallBooking.Services.Features.Fields.Queries.GetFields;
 
