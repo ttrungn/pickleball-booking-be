@@ -25,7 +25,7 @@ public class TimeSlotConfiguration : IEntityTypeConfiguration<TimeSlot>
         builder.ConfigureAuditableEntity();
 
         // Relationships
-        builder.HasMany(x => x.Bookings)
+        builder.HasMany(x => x.BookingTimeSlots)
             .WithOne(b => b.TimeSlot)
             .HasForeignKey(b => b.TimeSlotId)
             .OnDelete(DeleteBehavior.Restrict);
