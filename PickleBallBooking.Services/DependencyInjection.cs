@@ -39,5 +39,6 @@ public static class DependencyInjection
         builder.Services.AddScoped<IFieldService, FieldService>();
         builder.Services.AddScoped<IPricingService, PricingService>();
         builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
+        builder.Services.AddScoped<IFieldTypeService, FieldTypeService>();
     }
 }
