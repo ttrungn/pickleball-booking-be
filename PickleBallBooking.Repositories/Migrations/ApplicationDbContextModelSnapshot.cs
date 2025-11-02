@@ -188,9 +188,6 @@ namespace PickleBallBooking.Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValue("Pending");
 
-                    b.Property<Guid>("TimeSlotId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("TotalPrice")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");

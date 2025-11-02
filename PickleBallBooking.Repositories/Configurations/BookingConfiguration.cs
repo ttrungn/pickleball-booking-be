@@ -26,9 +26,6 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(x => x.FieldId)
             .IsRequired();
 
-        builder.Property(x => x.TimeSlotId)
-            .IsRequired();
-
         builder.Property(x => x.Date)
             .IsRequired();
 
