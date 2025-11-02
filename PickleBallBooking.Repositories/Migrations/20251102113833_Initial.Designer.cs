@@ -12,7 +12,7 @@ using PickleBallBooking.Repositories.Repositories.Contexts;
 namespace PickleBallBooking.Repositories.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251101070102_Initial")]
+    [Migration("20251102113833_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -190,9 +190,6 @@ namespace PickleBallBooking.Repositories.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValue("Pending");
-
-                    b.Property<Guid>("TimeSlotId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("TotalPrice")
                         .HasPrecision(10, 2)

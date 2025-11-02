@@ -1,4 +1,5 @@
-﻿using PickleBallBooking.Services.Features.Pricings.Commands.CreatePricing;
+
+using PickleBallBooking.Services.Features.Pricings.Commands.CreatePricing;
 using PickleBallBooking.Services.Features.Pricings.Commands.DeletePricing;
 using PickleBallBooking.Services.Features.Pricings.Commands.UpdatePricing;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingById;
@@ -34,3 +35,4 @@ public interface IPricingService
         GetPricingsByFieldQuery query,
         CancellationToken cancellationToken = default);
 }
+
