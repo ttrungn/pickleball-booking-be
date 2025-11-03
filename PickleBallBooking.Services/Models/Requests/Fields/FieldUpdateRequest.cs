@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace PickleBallBooking.Services.Models.Requests;
+namespace PickleBallBooking.Services.Models.Requests.Fields;
 
 public class FieldUpdateRequest
 {

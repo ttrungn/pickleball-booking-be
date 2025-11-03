@@ -1,4 +1,4 @@
-﻿namespace PickleBallBooking.Services.Models.Responses;
+﻿namespace PickleBallBooking.Services.Models.Responses.Fields;
 
 public class FieldResponse
 {

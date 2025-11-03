@@ -7,7 +7,7 @@ using PickleBallBooking.Services.Features.Fields.Commands.DeleteField;
 using PickleBallBooking.Services.Features.Fields.Commands.UpdateField;
 using PickleBallBooking.Services.Features.Fields.Queries.GetFieldById;
 using PickleBallBooking.Services.Features.Fields.Queries.GetFields;
-using PickleBallBooking.Services.Models.Requests;
+using PickleBallBooking.Services.Models.Requests.Fields;
 
 namespace PickleBallBooking.API.Controllers.Fields.v1;
 
