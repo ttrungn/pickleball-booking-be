@@ -104,8 +104,8 @@ public class FieldsController
         var query = new GetFieldsQuery()
         {
             Name = request.Name ?? string.Empty,
-            MinPrice = request.MinPrice ?? decimal.MinValue,
-            MaxPrice = request.MaxPrice ?? decimal.MaxValue,
+            MinPrice = request.MinPrice,
+            MaxPrice = request.MaxPrice,
             IsActive = request.IsActive ?? true,
             PageNumber = request.PageNumber ?? 0,
             PageSize = request.PageSize ?? 8
