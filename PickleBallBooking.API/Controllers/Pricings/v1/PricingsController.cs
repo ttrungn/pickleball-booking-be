@@ -7,6 +7,7 @@ using PickleBallBooking.Services.Features.Pricings.Commands.DeletePricing;
 using PickleBallBooking.Services.Features.Pricings.Commands.UpdatePricing;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingById;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricings;
+using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingsByField;
 using PickleBallBooking.Services.Models.Requests;
 
 namespace PickleBallBooking.API.Controllers.Pricings.v1;
@@ -102,5 +103,18 @@ public class PricingsController
         }
 
         return Results.BadRequest(result.ToPaginatedApiResponse());
+    }
+
+    [HttpGet("field/{fieldId:guid}")]
+    public async Task<IResult> GetPricingsByFieldAsync([FromRoute] Guid fieldId, CancellationToken cancellationToken = default)
+    {
+        var query = new GetPricingsByFieldQuery { FieldId = fieldId };
+        var result = await _sender.Send(query, cancellationToken);
+        if (result.Success)
+        {
+            return Results.Ok(result.ToDataApiResponse());
+        }
+
+        return Results.NotFound(result.ToDataApiResponse());
     }
 }

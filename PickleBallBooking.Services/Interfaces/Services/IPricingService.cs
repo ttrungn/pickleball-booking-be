@@ -1,9 +1,10 @@
-﻿
+
 using PickleBallBooking.Services.Features.Pricings.Commands.CreatePricing;
 using PickleBallBooking.Services.Features.Pricings.Commands.DeletePricing;
 using PickleBallBooking.Services.Features.Pricings.Commands.UpdatePricing;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingById;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricings;
+using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingsByField;
 using PickleBallBooking.Services.Models.Responses;
 
 namespace PickleBallBooking.Services.Interfaces.Services;
@@ -28,6 +29,10 @@ public interface IPricingService
 
     Task<PaginatedServiceResponse<PricingResponse>> GetPricingsAsync(
         GetPricingsQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<DataServiceResponse<List<PricingResponse>>> GetPricingsByFieldAsync(
+        GetPricingsByFieldQuery query,
         CancellationToken cancellationToken = default);
 }
 

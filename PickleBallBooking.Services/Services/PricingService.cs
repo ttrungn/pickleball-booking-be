@@ -7,6 +7,7 @@ using PickleBallBooking.Services.Features.Pricings.Commands.DeletePricing;
 using PickleBallBooking.Services.Features.Pricings.Commands.UpdatePricing;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingById;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricings;
+using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingsByField;
 using PickleBallBooking.Services.Interfaces.Services;
 using PickleBallBooking.Services.Models.Responses;
 
@@ -148,6 +149,44 @@ public class PricingService : IPricingService
             PageSize = query.PageSize,
             TotalCount = totalCounts,
             TotalPages = totalPages,
+            Data = response
+        };
+    }
+
+    public async Task<DataServiceResponse<List<PricingResponse>>> GetPricingsByFieldAsync(GetPricingsByFieldQuery query, CancellationToken cancellationToken = default)
+    {
+        var field = await _unitOfWork.GetRepository<Field>().Query()
+            .FirstOrDefaultAsync(f => f.Id == query.FieldId && f.IsActive, cancellationToken);
+
+        if (field == null)
+            return new DataServiceResponse<List<PricingResponse>> 
+            { 
+                Success = false, 
+                Message = "Field not found!", 
+                Data = new List<PricingResponse>() 
+            };
+
+        var pricings = await _unitOfWork.GetRepository<Pricing>().Query()
+            .AsNoTracking()
+            .Include(p => p.TimeSlot)
+            .Where(p => p.FieldId == query.FieldId && p.IsActive)
+            .OrderBy(p => p.DayOfWeek)
+            .ThenBy(p => p.TimeSlot.StartTime)
+            .ToListAsync(cancellationToken);
+
+        var response = pricings.Select(p => new PricingResponse
+        {
+            Id = p.Id,
+            FieldId = p.FieldId,
+            TimeSlotId = p.TimeSlotId,
+            DayOfWeek = p.DayOfWeek,
+            Price = p.Price
+        }).ToList();
+
+        return new DataServiceResponse<List<PricingResponse>>
+        {
+            Success = true,
+            Message = "Pricings retrieved successfully",
             Data = response
         };
     }
