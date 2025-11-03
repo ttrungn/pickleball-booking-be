@@ -4,6 +4,7 @@ using PickleBallBooking.Repositories.Interfaces.Repositories;
 using PickleBallBooking.Services.Features.FieldTypes.Queries.GetFieldTypes;
 using PickleBallBooking.Services.Interfaces.Services;
 using PickleBallBooking.Services.Models.Responses;
+using PickleBallBooking.Services.Models.Responses.Fields;
 
 namespace PickleBallBooking.Services.Services;
 

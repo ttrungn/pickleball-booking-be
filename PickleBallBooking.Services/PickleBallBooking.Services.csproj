@@ -7,19 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PickleBallBooking.Repositories\PickleBallBooking.Repositories.csproj"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Mappers\"/>
+    <ProjectReference Include="..\PickleBallBooking.Repositories\PickleBallBooking.Repositories.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
-    <PackageReference Include="FluentValidation" Version="12.0.0"/>
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0"/>
-    <PackageReference Include="MediatR" Version="13.0.0"/>
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0"/>
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
+    <PackageReference Include="MediatR" Version="13.0.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
   </ItemGroup>
 
 </Project>

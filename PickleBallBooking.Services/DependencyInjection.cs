@@ -26,6 +26,11 @@ public static class DependencyInjection
         // jwt settings
         var jwtSettings = builder.Configuration.GetSection("JwtSettings");
         builder.Services.Configure<JwtSettings>(jwtSettings);
+        
+        // momo settings
+        var momoSettings = builder.Configuration.GetSection("Momo");
+
+        builder.Services.Configure<MomoSettings>(momoSettings); 
 
         // blob settings
         var blobSettings = builder.Configuration.GetSection("Azure:BlobStorageSettings");
@@ -37,6 +42,11 @@ public static class DependencyInjection
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
         builder.Services.AddScoped<IFieldService, FieldService>();
+        builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddHttpClient<IPaymentService, PaymentService>();  
+        builder.Services.AddScoped<IPricingService, PricingService>();
+        builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
         builder.Services.AddScoped<IFieldTypeService, FieldTypeService>();
+        builder.Services.AddScoped<IBookingService, BookingService>();
     }
 }
