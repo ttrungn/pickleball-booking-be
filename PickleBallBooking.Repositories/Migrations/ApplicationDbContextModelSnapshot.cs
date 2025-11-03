@@ -188,9 +188,6 @@ namespace PickleBallBooking.Repositories.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValue("Pending");
 
-                    b.Property<Guid>("TimeSlotId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("TotalPrice")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
@@ -215,9 +212,34 @@ namespace PickleBallBooking.Repositories.Migrations
 
                     b.HasIndex("PaymentId");
 
+                    b.ToTable("Bookings", (string)null);
+                });
+
+            modelBuilder.Entity("PickleBallBooking.Domain.Entities.BookingTimeSlot", b =>
+                {
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TimeSlotId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("BookingId", "TimeSlotId");
+
                     b.HasIndex("TimeSlotId");
 
-                    b.ToTable("Bookings", (string)null);
+                    b.ToTable("BookingTimeSlot", (string)null);
                 });
 
             modelBuilder.Entity("PickleBallBooking.Domain.Entities.Field", b =>
@@ -685,15 +707,26 @@ namespace PickleBallBooking.Repositories.Migrations
                         .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.Navigation("Field");
+
+                    b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("PickleBallBooking.Domain.Entities.BookingTimeSlot", b =>
+                {
+                    b.HasOne("PickleBallBooking.Domain.Entities.Booking", "Booking")
+                        .WithMany("BookingTimeSlots")
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("PickleBallBooking.Domain.Entities.TimeSlot", "TimeSlot")
-                        .WithMany("Bookings")
+                        .WithMany("BookingTimeSlots")
                         .HasForeignKey("TimeSlotId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Field");
-
-                    b.Navigation("Payment");
+                    b.Navigation("Booking");
 
                     b.Navigation("TimeSlot");
                 });
@@ -748,6 +781,11 @@ namespace PickleBallBooking.Repositories.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PickleBallBooking.Domain.Entities.Booking", b =>
+                {
+                    b.Navigation("BookingTimeSlots");
+                });
+
             modelBuilder.Entity("PickleBallBooking.Domain.Entities.Field", b =>
                 {
                     b.Navigation("Bookings");
@@ -769,7 +807,7 @@ namespace PickleBallBooking.Repositories.Migrations
 
             modelBuilder.Entity("PickleBallBooking.Domain.Entities.TimeSlot", b =>
                 {
-                    b.Navigation("Bookings");
+                    b.Navigation("BookingTimeSlots");
 
                     b.Navigation("Pricing");
                 });

@@ -38,7 +38,7 @@ public class FieldService : IFieldService
         {
             var stream = command.ImageUrl.OpenReadStream();
             var imageName = id + Path.GetExtension(command.ImageUrl.FileName);
-                imageUrl = await _blobService.UploadAsync(stream, imageName, _blobSettings.DefaultContainer);
+            imageUrl = await _blobService.UploadAsync(stream, imageName, _blobSettings.DefaultContainer);
         }
 
         if (command.BluePrintImageUrl != null)
@@ -205,13 +205,14 @@ public class FieldService : IFieldService
             {
                 Id = field.FieldType.Id,
                 Name = field.FieldType.Name,
-                Description = field.FieldType.Description
+                Description = field.FieldType.Description,
+                IsActive = field.FieldType.IsActive
             }
         };
 
         return new DataServiceResponse<FieldResponse>()
         {
-            Success = true, Message = "Field retrieved successfully", Data = response
+            Success = true, Message = "Field retrieved successfully!", Data = response
         };
     }
 
@@ -225,7 +226,8 @@ public class FieldService : IFieldService
             .Where(f => f.IsActive == query.IsActive &&
                         (!query.MinPrice.HasValue || f.PricePerHour >= query.MinPrice.Value) &&
                         (!query.MaxPrice.HasValue || f.PricePerHour <= query.MaxPrice.Value) &&
-                        (string.IsNullOrEmpty(query.Name) || f.Name.Contains(query.Name)));
+                        (string.IsNullOrEmpty(query.Name) || f.Name.Contains(query.Name)))
+            .OrderByDescending(f => f.CreatedAt);
         var totalCounts = await predicate.CountAsync(cancellationToken);
         var totalPages = (int)Math.Ceiling(totalCounts / (double)query.PageSize);
         var fields = await predicate
@@ -255,7 +257,7 @@ public class FieldService : IFieldService
         return new PaginatedServiceResponse<FieldResponse>()
         {
             Success = true,
-            Message = "Fields retrieved successfully",
+            Message = "Fields retrieved successfully!",
             PageNumber = query.PageNumber,
             PageSize = query.PageSize,
             TotalCount = totalCounts,
