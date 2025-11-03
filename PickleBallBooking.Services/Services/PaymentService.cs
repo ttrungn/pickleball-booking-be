@@ -95,14 +95,15 @@ public class PaymentService : IPaymentService
 
     public async Task<BaseServiceResponse> ConfirmMomoPaymentAsync(ConfirmMomoPaymentCommand request)
     {
-        _logger.LogInformation("Confirming MoMo payment");
+    _logger.LogInformation("Confirming MoMo payment for PartnerCode={PartnerCode}, OrderId={OrderId}", request.PartnerCode, request.OrderId);
 
-        if (request.IsValidSignature(_momoSettings))
+        // Signature must be valid; fail fast if it isn't
+        if (!request.IsValidSignature(_momoSettings))
         {
             _logger.LogError("Invalid signature for MoMo confirm");
             return new BaseServiceResponse
             {
-                Message = "Error while confirm payment",
+                Message = "Invalid MoMo signature",
                 Success = false
             };
         }

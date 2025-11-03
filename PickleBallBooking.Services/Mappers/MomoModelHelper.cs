@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PickleBallBooking.Services.Models.Configurations;
@@ -44,19 +45,25 @@ public static class MomoModelMapper
     }
     public static string GenerateSignature(this ConfirmMomoPaymentCommand request, MomoSettings options)
     {
-        var rawHash = "accessKey=" + options.AccessKey +
-                      "&amount=" + request.Amount +
-                      "&extraData=" + request.ExtraData +
-                      "&message=" + request.Message +
-                      "&orderId=" + request.OrderId +
-                      "&orderInfo=" + request.OrderInfo +
-                      "&orderType=" + request.OrderType +
-                      "&partnerCode=" + request.PartnerCode +
-                      "&payType=" + request.PayType +
-                      "&requestId=" + request.RequestId +
-                      "&responseTime=" + request.ResponseTime +
-                      "&resultCode=" + request.resultCode +
-                      "&transId=" + request.TransId;
+        // Build the raw signature string exactly as MoMo specifies, using invariant formatting for numerics
+        string sAmount = request.Amount?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        string sResponseTime = request.ResponseTime?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        string sResultCode = request.ResultCode?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        string sTransId = request.TransId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+
+        string rawHash = "accessKey=" + (options.AccessKey ?? string.Empty) +
+                         "&amount=" + sAmount +
+                         "&extraData=" + (request.ExtraData ?? string.Empty) +
+                         "&message=" + (request.Message ?? string.Empty) +
+                         "&orderId=" + (request.OrderId ?? string.Empty) +
+                         "&orderInfo=" + (request.OrderInfo ?? string.Empty) +
+                         "&orderType=" + (request.OrderType ?? string.Empty) +
+                         "&partnerCode=" + (request.PartnerCode ?? string.Empty) +
+                         "&payType=" + (request.PayType ?? string.Empty) +
+                         "&requestId=" + (request.RequestId ?? string.Empty) +
+                         "&responseTime=" + sResponseTime +
+                         "&resultCode=" + sResultCode +
+                         "&transId=" + sTransId;
 
         return HashHelper.HmacSHA256(rawHash, options.SecretKey ?? "");
     }

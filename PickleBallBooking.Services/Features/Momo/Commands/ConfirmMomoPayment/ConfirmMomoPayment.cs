@@ -21,7 +21,7 @@ public record ConfirmMomoPaymentCommand : IRequest<BaseServiceResponse>
 
     public long? TransId { get; init; }
 
-    public int? resultCode { get; init; }
+    public int? ResultCode { get; init; }
 
     public string? Message { get; init; }
 
