@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using PickleBallBooking.Services.BackgroundServices;
 using PickleBallBooking.Services.Behaviours;
 using PickleBallBooking.Services.Interfaces.Services;
 using PickleBallBooking.Services.Models.Configurations;
@@ -23,6 +24,9 @@ public static class DependencyInjection
             cfg.AddOpenBehavior(typeof(ValidationBehaviour<,>));
         });
 
+        // Register background hosted service to auto-cancel stale bookings
+        builder.Services.AddHostedService<BookingAutoCancelBackgroundService>();
+        
         // jwt settings
         var jwtSettings = builder.Configuration.GetSection("JwtSettings");
         builder.Services.Configure<JwtSettings>(jwtSettings);

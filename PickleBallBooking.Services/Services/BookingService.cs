@@ -57,7 +57,26 @@ public class BookingService : IBookingService
                     Message = $"Time slots with IDs {string.Join(", ", missingIds)} do not exist."
                 };
             }
-
+            // If booking date is today, ensure no past time slots are being booked
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            if (command.Date == today)
+            {
+                var currentTime = TimeOnly.FromDateTime(DateTime.Now);
+                var pastTimeSlots = existingTimeSlots
+                    .Where(ts => ts.StartTime < currentTime)
+                    .Select(ts => ts.Id)
+                    .ToList();
+    
+                if (pastTimeSlots.Any())
+                {
+                    return new DataServiceResponse<Guid>
+                    {
+                        Success = false,
+                        Data = Guid.Empty,
+                        Message = $"Cannot book past time slots for today."
+                    };
+                }
+            }
             // Check if TimeSlots are already booked for this field and date
             var bookingTimeSlotRepo = _unitOfWork.GetRepository<BookingTimeSlot>();
             var conflictingBookings = await bookingTimeSlotRepo.Query()
@@ -192,6 +211,7 @@ public class BookingService : IBookingService
         var bookingResponses = bookings.Select(b => new BookingResponse
         {
             Id = b.Id,
+            FieldId = b.FieldId,
             FieldName = b.Field.Name,
             Date = b.Date,
             TotalPrice = b.TotalPrice,
@@ -264,6 +284,7 @@ public class BookingService : IBookingService
         var bookingResponses = bookings.Select(b => new BookingResponse
         {
             Id = b.Id,
+            FieldId = b.FieldId,
             FieldName = b.Field.Name,
             Date = b.Date,
             TotalPrice = b.TotalPrice,
@@ -312,6 +333,7 @@ public class BookingService : IBookingService
         var bookingResponse = new BookingResponse
         {
             Id = booking.Id,
+            FieldId = booking.FieldId,
             FieldName = booking.Field.Name,
             Date = booking.Date,
             TotalPrice = booking.TotalPrice,
