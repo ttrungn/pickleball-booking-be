@@ -1,12 +1,14 @@
 ﻿using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using PickleBallBooking.Domain.Entities;
+using PickleBallBooking.Domain.Enums;
 using PickleBallBooking.Repositories.Interfaces.Repositories;
 using PickleBallBooking.Services.Features.TimeSlots.Commands.CreateTimeSlot;
 using PickleBallBooking.Services.Features.TimeSlots.Commands.DeleteTimeSlot;
 using PickleBallBooking.Services.Features.TimeSlots.Commands.UpdateTimeSlot;
 using PickleBallBooking.Services.Features.TimeSlots.Queries.GetTimeSlotById;
 using PickleBallBooking.Services.Features.TimeSlots.Queries.GetTimeSlots;
+using PickleBallBooking.Services.Features.TimeSlots.Queries.GetTimeSlotsByFieldAndDate;
 using PickleBallBooking.Services.Interfaces.Services;
 using PickleBallBooking.Services.Models.Responses;
 
@@ -122,6 +124,84 @@ public class TimeSlotService : ITimeSlotService
             TotalCount = totalCounts,
             TotalPages = totalPages,
             Data = data
+        };
+    }
+
+    public async Task<DataServiceResponse<List<TimeSlotWithAvailabilityResponse>>> GetTimeSlotsByFieldAndDateAsync(
+        GetTimeSlotsByFieldAndDateQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        // Check if field exists
+        var field = await _unitOfWork.GetRepository<Field>().Query()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.Id == query.FieldId && f.IsActive, cancellationToken);
+
+        if (field == null)
+            return new DataServiceResponse<List<TimeSlotWithAvailabilityResponse>>
+            {
+                Success = false,
+                Message = "Field not found!",
+                Data = new List<TimeSlotWithAvailabilityResponse>()
+            };
+
+        // Get day of week from the date
+        var dayOfWeek = query.Date.DayOfWeek switch
+        {
+            System.DayOfWeek.Sunday => Domain.Enums.DayOfWeek.Sunday,
+            System.DayOfWeek.Monday => Domain.Enums.DayOfWeek.Monday,
+            System.DayOfWeek.Tuesday => Domain.Enums.DayOfWeek.Tuesday,
+            System.DayOfWeek.Wednesday => Domain.Enums.DayOfWeek.Wednesday,
+            System.DayOfWeek.Thursday => Domain.Enums.DayOfWeek.Thursday,
+            System.DayOfWeek.Friday => Domain.Enums.DayOfWeek.Friday,
+            System.DayOfWeek.Saturday => Domain.Enums.DayOfWeek.Saturday,
+            _ => Domain.Enums.DayOfWeek.Sunday
+        };
+
+        // Get all active timeslots with pricing for this field and day
+        var pricingData = await _unitOfWork.GetRepository<Pricing>().Query()
+            .AsNoTracking()
+            .Where(p => p.FieldId == query.FieldId && p.DayOfWeek == dayOfWeek && p.IsActive)
+            .Include(p => p.TimeSlot)
+            .Where(p => p.TimeSlot.IsActive)
+            .OrderBy(p => p.TimeSlot.StartTime)
+            .ToListAsync(cancellationToken);
+
+        if (!pricingData.Any())
+            return new DataServiceResponse<List<TimeSlotWithAvailabilityResponse>>
+            {
+                Success = true,
+                Message = "No time slots available for this field on this day",
+                Data = new List<TimeSlotWithAvailabilityResponse>()
+            };
+
+        // Get booked timeslots for this field and date
+        var bookedTimeSlotIds = await _unitOfWork.GetRepository<BookingTimeSlot>().Query()
+            .AsNoTracking()
+            .Where(bts => bts.Booking.FieldId == query.FieldId &&
+                          bts.Booking.Date == query.Date &&
+                          bts.Booking.IsActive &&
+                          (bts.Booking.Status == BookingStatus.Pending || 
+                           bts.Booking.Status == BookingStatus.Confirmed ||
+                           bts.Booking.Status == BookingStatus.Completed))
+            .Select(bts => bts.TimeSlotId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        // Build response
+        var result = pricingData.Select(p => new TimeSlotWithAvailabilityResponse
+        {
+            Id = p.TimeSlot.Id,
+            StartTime = p.TimeSlot.StartTime,
+            EndTime = p.TimeSlot.EndTime,
+            Price = p.Price,
+            IsAvailable = !bookedTimeSlotIds.Contains(p.TimeSlot.Id)
+        }).ToList();
+
+        return new DataServiceResponse<List<TimeSlotWithAvailabilityResponse>>
+        {
+            Success = true,
+            Message = "Time slots retrieved successfully",
+            Data = result
         };
     }
 }
