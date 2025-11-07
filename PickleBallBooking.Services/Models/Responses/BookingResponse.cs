@@ -8,6 +8,8 @@ public class BookingResponse
     public Guid FieldId { get; set; }
     public string FieldName { get; set; } = null!;
     public Guid? PaymentId { get; set; }
+    public string UserId { get; set; } = null!;
+    public string? Email { get; set; }
     public DateOnly Date { get; set; }
     public string? Status { get; set; }
     public decimal TotalPrice { get; set; }

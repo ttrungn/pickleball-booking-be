@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using PickleBallBooking.Domain.Entities;
 using PickleBallBooking.Domain.Enums;
 using PickleBallBooking.Repositories.Interfaces.Repositories;
+using PickleBallBooking.Repositories.Repositories.Contexts;
 using PickleBallBooking.Services.Features.Bookings.Commands.CreateBooking;
 using PickleBallBooking.Services.Features.Bookings.Commands.UpdateBooking;
 using PickleBallBooking.Services.Features.Bookings.Queries.GetBookingById;
@@ -15,12 +17,13 @@ namespace PickleBallBooking.Services.Services;
 public class BookingService : IBookingService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly UserManager<ApplicationUser> _userManager;
     
-    public BookingService(IUnitOfWork unitOfWork)
+    public BookingService(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
     {
         _unitOfWork = unitOfWork;
+        _userManager = userManager;
     }
-
 
     public async Task<DataServiceResponse<Guid>> CreateBookingAsync(
         CreateBookingCommand command, 
@@ -240,6 +243,7 @@ public class BookingService : IBookingService
         GetBookingsQuery query,
         CancellationToken cancellationToken = default)
     {
+
         var bookingRepo = _unitOfWork.GetRepository<Booking>(); 
         var bookingsQuery = bookingRepo.Query()
             .Include(b => b.Field)
@@ -252,18 +256,18 @@ public class BookingService : IBookingService
             bookingsQuery = bookingsQuery
                 .Where(b => b.Field.Name.Contains(query.FieldName));
         }
-        
+
         if (query.MinPrice.HasValue) 
         { 
             bookingsQuery = bookingsQuery
                 .Where(b => b.TotalPrice >= query.MinPrice.Value);
         }
-        
+
         if (query.MaxPrice.HasValue) 
         { 
             bookingsQuery = bookingsQuery.Where(b => b.TotalPrice <= query.MaxPrice.Value);
         }
-        
+
         if (query.IsActive.HasValue) 
         { 
             bookingsQuery = bookingsQuery.Where(b => b.IsActive == query.IsActive.Value);
@@ -274,18 +278,55 @@ public class BookingService : IBookingService
             bookingsQuery = bookingsQuery.Where(b => b.Status == query.Status.Value);
         }
 
+        if (query.Date.HasValue)
+        {
+            bookingsQuery = bookingsQuery.Where(b => b.Date == query.Date.Value);
+        }
+        
+        if (!string.IsNullOrEmpty(query.Email))
+        {
+            var matchingUserIds = await _userManager.Users
+                .Where(u => u.Email.Contains(query.Email))
+                .Select(u => u.Id)
+                .ToListAsync(cancellationToken);
+            
+            if (!matchingUserIds.Any())
+            {
+                return new PaginatedServiceResponse<BookingResponse>
+                {
+                    Success = true,
+                    Message = "Bookings retrieved successfully",
+                    Data = new List<BookingResponse>(),
+                    PageNumber = query.PageNumber,
+                    PageSize = query.PageSize,
+                    TotalCount = 0,
+                    TotalPages = 0
+                };
+            }
+
+            bookingsQuery = bookingsQuery.Where(b => matchingUserIds.Contains(b.UserId));
+        }
+
         var totalCounts = await bookingsQuery.CountAsync(cancellationToken);
         var totalPages = (int)Math.Ceiling(totalCounts / (double)query.PageSize);
         var bookings = await bookingsQuery
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
+        
+        var userIds = bookings.Select(b => b.UserId).Distinct().ToList();
+        var users = await _userManager.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToListAsync(cancellationToken);
+        var userById = users.ToDictionary(u => u.Id, u => u.Email);
 
         var bookingResponses = bookings.Select(b => new BookingResponse
         {
             Id = b.Id,
             FieldId = b.FieldId,
             FieldName = b.Field.Name,
+            UserId = b.UserId,
+            Email = userById.TryGetValue(b.UserId, out var email) ? email : null,
             Date = b.Date,
             TotalPrice = b.TotalPrice,
             Status = b.Status.ToString(), 
