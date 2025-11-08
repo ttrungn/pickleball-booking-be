@@ -15,7 +15,7 @@ public record RegisterCommand : IRequest<BaseServiceResponse>
     public string LastName { get; set; } = null!;
     public string? PhoneNumber { get; set; }
 
-    [JsonIgnore] public string Role { get; set; } = Roles.Admin;
+    [JsonIgnore] public string Role { get; set; } = Roles.Customer;
 }
 
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
