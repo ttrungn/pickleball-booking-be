@@ -3,12 +3,14 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PickleBallBooking.API.Mappers;
 using PickleBallBooking.Services.Features.Pricings.Commands.CreatePricing;
-using PickleBallBooking.Services.Features.Pricings.Commands.DeletePricing;
-using PickleBallBooking.Services.Features.Pricings.Commands.UpdatePricing;
+using PickleBallBooking.Services.Features.Pricings.Commands.DeletePricingRange;
+using PickleBallBooking.Services.Features.Pricings.Commands.UpdatePricingRange;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingById;
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricings;
+
 using PickleBallBooking.Services.Features.Pricings.Queries.GetPricingsByField;
 using PickleBallBooking.Services.Models.Requests;
+using PickleBallBooking.Services.Exceptions;
 
 namespace PickleBallBooking.API.Controllers.Pricings.v1;
 
@@ -25,49 +27,45 @@ public class PricingsController
     }
 
     [HttpPost]
-    public async Task<IResult> CreatePricingAsync(CreatePricingCommand command, CancellationToken cancellationToken = default)
+    public async Task<IResult> CreatePricingAsync([FromBody] CreatePricingCommand command, CancellationToken cancellationToken = default)
     {
-        var result = await _sender.Send(command, cancellationToken);
-        if (result.Success)
+        try
         {
-            return Results.Created($"/api/pricings/{result.Data}", result.ToDataApiResponse());
-        }
+            var result = await _sender.Send(command, cancellationToken);
+            if (result.Success)
+            {
+                return Results.Created("/api/pricings", result.ToDataApiResponse());
+            }
 
-        return Results.BadRequest(result.ToDataApiResponse());
+            return Results.BadRequest(result.ToDataApiResponse());
+        }
+        catch (ValidationException ex)
+        {
+            // Return 400 with validation message
+            return Results.BadRequest(new { Success = false, Message = ex.Message });
+        }
     }
 
-    [HttpPut("{id:guid}")]
-    public async Task<IResult> UpdatePricingAsync([FromRoute] Guid id, [FromBody] UpdatePricingCommand request, CancellationToken cancellationToken = default)
+    [HttpPut]
+    public async Task<IResult> UpdatePricingRangeAsync([FromBody] UpdatePricingRangeCommand command, CancellationToken cancellationToken = default)
     {
-        var command = new UpdatePricingCommand
-        {
-            Id = id,
-            FieldId= request.FieldId,
-            TimeSlotId = request.TimeSlotId,
-            DayOfWeek = request.DayOfWeek,
-            //Price = request.Price
-        };
-
         var result = await _sender.Send(command, cancellationToken);
         if (result.Success)
         {
-            return Results.NoContent();
+            return Results.Ok(result.ToBaseApiResponse());
         }
-
         return Results.BadRequest(result.ToBaseApiResponse());
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IResult> DeletePricingAsync([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    [HttpDelete]
+    public async Task<IResult> DeletePricingRangeAsync([FromBody] DeletePricingRangeCommand command, CancellationToken cancellationToken = default)
     {
-        var command = new DeletePricingCommand { Id = id };
         var result = await _sender.Send(command, cancellationToken);
         if (result.Success)
         {
-            return Results.NoContent();
+            return Results.Ok(result.ToBaseApiResponse());
         }
-
-        return Results.NotFound(result.ToBaseApiResponse());
+        return Results.BadRequest(result.ToBaseApiResponse());
     }
 
     [HttpGet("{id:guid}")]
@@ -105,16 +103,15 @@ public class PricingsController
         return Results.BadRequest(result.ToPaginatedApiResponse());
     }
 
-    [HttpGet("field/{fieldId:guid}")]
+    [HttpGet("by-field/{fieldId:guid}")]
     public async Task<IResult> GetPricingsByFieldAsync([FromRoute] Guid fieldId, CancellationToken cancellationToken = default)
     {
         var query = new GetPricingsByFieldQuery { FieldId = fieldId };
         var result = await _sender.Send(query, cancellationToken);
         if (result.Success)
-        {
             return Results.Ok(result.ToDataApiResponse());
-        }
-
-        return Results.NotFound(result.ToDataApiResponse());
+        return Results.BadRequest(result.ToDataApiResponse());
     }
+
+    
 }

@@ -12,9 +12,9 @@ public class Pricing : BaseAuditableEntity<Guid>
     public DayOfWeek DayOfWeek { get; set; }
     
     public decimal Price { get; set; }
-
+    public TimeOnly StartTime { get; set; }
+    public TimeOnly EndTime { get; set; }
     // Navigation properties
     public Field Field { get; set; } = null!;
     public TimeSlot TimeSlot { get; set; } = null!;
 }
-

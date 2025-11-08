@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PickleBallBooking.API.Converters;
 using PickleBallBooking.API.Infrastructures;
 
 namespace PickleBallBooking.API;
@@ -72,6 +73,8 @@ public static class DependencyInjection
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new NullableTimeOnlyJsonConverter());
             });
         builder.Services.AddAuthentication(options =>
             {
