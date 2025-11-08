@@ -3,37 +3,42 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PickleBallBooking.Repositories.Interfaces.Repositories;
-using PickleBallBooking.Services.Interfaces.Services;
 using PickleBallBooking.Services.Models.Responses;
 using PickleBallBooking.Domain.Entities;
+using PickleBallBooking.Services.Interfaces.Services;
 using DayOfWeek = PickleBallBooking.Domain.Enums.DayOfWeek;
 
 namespace PickleBallBooking.Services.Features.Pricings.Commands.CreatePricing;
 
-public record CreatePricingCommand : IRequest<DataServiceResponse<Guid>>
+public record CreatePricingCommand : IRequest<DataServiceResponse<List<Guid>>>
 {
     public Guid FieldId { get; init; }
-    public Guid TimeSlotId { get; init; }
     public DayOfWeek DayOfWeek { get; init; }
-    // Price removed - will be calculated automatically
+    public TimeOnly StartTime { get; init; }
+    public TimeOnly EndTime { get; init; }
+    public decimal Price { get; init; }
 }
 
 public class CreatePricingCommandValidator : AbstractValidator<CreatePricingCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private static readonly int[] AllowedMinutes = { 0, 30 };
 
     public CreatePricingCommandValidator(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
 
         RuleFor(x => x.FieldId).NotEmpty().WithMessage("Field ID is required!");
-        RuleFor(x => x.TimeSlotId).NotEmpty().WithMessage("Time slot ID is required!");
-        // Price validation removed - calculated automatically
+        RuleFor(x => x.StartTime).NotEmpty().WithMessage("Start time is required!");
+        RuleFor(x => x.EndTime).NotEmpty().WithMessage("End time is required!")
+            .GreaterThan(x => x.StartTime).WithMessage("End time must be greater than start time!");
+        RuleFor(x => x.Price).GreaterThan(0m).WithMessage("Price must be greater than 0");
 
-        // Async validation: ensure referenced entities exist and there is no duplicate active pricing
+        RuleFor(x => x.StartTime.Minute).Must(m => AllowedMinutes.Contains(m)).WithMessage("Start time minutes must be 00 or 30");
+        RuleFor(x => x.EndTime.Minute).Must(m => AllowedMinutes.Contains(m)).WithMessage("End time minutes must be 00 or 30");
+
         RuleFor(x => x).CustomAsync(async (cmd, ctx, ct) =>
         {
-            // Check field exists and is active
             var fieldExists = await _unitOfWork.GetRepository<Field>().Query()
                 .AnyAsync(f => f.Id == cmd.FieldId && f.IsActive, ct);
             if (!fieldExists)
@@ -42,82 +47,67 @@ public class CreatePricingCommandValidator : AbstractValidator<CreatePricingComm
                 return;
             }
 
-            // Check timeslot exists and is active
-            var timeSlotExists = await _unitOfWork.GetRepository<TimeSlot>().Query()
-                .AnyAsync(t => t.Id == cmd.TimeSlotId && t.IsActive, ct);
-            if (!timeSlotExists)
+            var totalMinutes = (int)(cmd.EndTime.ToTimeSpan() - cmd.StartTime.ToTimeSpan()).TotalMinutes;
+            if (totalMinutes % 30 != 0)
             {
-                ctx.AddFailure("Time slot not found!");
+                ctx.AddFailure("Time range must be divisible by 30 minutes");
                 return;
             }
 
-            // Check duplicate pricing (same FieldId + TimeSlotId + DayOfWeek and active)
-            var pricingExists = await _unitOfWork.GetRepository<Pricing>().Query()
-                .AnyAsync(p => p.FieldId == cmd.FieldId && p.TimeSlotId == cmd.TimeSlotId && p.DayOfWeek == cmd.DayOfWeek && p.IsActive, ct);
 
-            if (pricingExists)
+            var intervals = new List<(TimeOnly s, TimeOnly e)>();
+            var cursor = cmd.StartTime;
+            while (cursor < cmd.EndTime)
             {
-                ctx.AddFailure("Pricing for this field/time/day already exists!");
+                var next = cursor.AddMinutes(30);
+                intervals.Add((cursor, next));
+                cursor = next;
+            }
+            var intervalSet = intervals.ToHashSet();
+
+
+            var candidates = await _unitOfWork.GetRepository<Pricing>().Query()
+                .Include(p => p.TimeSlot)
+                .Where(p => p.IsActive &&
+                            p.FieldId == cmd.FieldId &&
+                            p.DayOfWeek == cmd.DayOfWeek &&
+                            p.TimeSlot.StartTime >= cmd.StartTime &&
+                            p.TimeSlot.EndTime <= cmd.EndTime)
+                .Select(p => new { p.TimeSlot.StartTime, p.TimeSlot.EndTime })
+                .ToListAsync(ct);
+
+            var duplicatePairs = candidates
+                .Where(c => intervalSet.Contains((c.StartTime, c.EndTime)))
+                .Select(c => $"{c.StartTime:HH:mm}-{c.EndTime:HH:mm}")
+                .Distinct()
+                .ToList();
+
+            if (duplicatePairs.Any())
+            {
+                ctx.AddFailure($"Pricing already exists for slots: {string.Join(", ", duplicatePairs)}");
             }
         });
     }
 }
 
-public class CreatePricingCommandHandler : IRequestHandler<CreatePricingCommand, DataServiceResponse<Guid>>
+public class CreatePricingCommandHandler : IRequestHandler<CreatePricingCommand, DataServiceResponse<List<Guid>>>
 {
-    private readonly IPricingService _pricingService;
     private readonly ILogger<CreatePricingCommandHandler> _logger;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IPricingService _pricingService;
 
-    public CreatePricingCommandHandler(IPricingService pricingService, ILogger<CreatePricingCommandHandler> logger, IUnitOfWork unitOfWork)
+    public CreatePricingCommandHandler(ILogger<CreatePricingCommandHandler> logger, IPricingService pricingService)
     {
-        _pricingService = pricingService;
         _logger = logger;
-        _unitOfWork = unitOfWork;
+        _pricingService = pricingService;
     }
 
-    public async Task<DataServiceResponse<Guid>> Handle(CreatePricingCommand request, CancellationToken cancellationToken)
+    public async Task<DataServiceResponse<List<Guid>>> Handle(CreatePricingCommand request, CancellationToken cancellationToken)
     {
-        // Calculate price based on Field.PricePerHour and TimeSlot duration
-        var field = await _unitOfWork.GetRepository<Field>().Query()
-            .FirstOrDefaultAsync(f => f.Id == request.FieldId && f.IsActive, cancellationToken);
-        
-        var timeSlot = await _unitOfWork.GetRepository<TimeSlot>().Query()
-            .FirstOrDefaultAsync(t => t.Id == request.TimeSlotId && t.IsActive, cancellationToken);
-
-        if (field == null || timeSlot == null)
-        {
-            return new DataServiceResponse<Guid> 
-            { 
-                Success = false, 
-                Message = "Field or TimeSlot not found!", 
-                Data = Guid.Empty 
-            };
-        }
-
-        // Calculate duration in hours
-        var startTime = timeSlot.StartTime.ToTimeSpan();
-        var endTime = timeSlot.EndTime.ToTimeSpan();
-        var durationHours = (decimal)(endTime - startTime).TotalHours;
-
-        // Calculate price automatically
-        var calculatedPrice = field.PricePerHour * durationHours;
-
-        // Create pricing entity directly (bypass service to set calculated price)
-        var id = Guid.NewGuid();
-        var pricing = new Pricing
-        {
-            Id = id,
-            FieldId = request.FieldId,
-            TimeSlotId = request.TimeSlotId,
-            DayOfWeek = request.DayOfWeek,
-            Price = calculatedPrice
-        };
-
-        await _unitOfWork.GetRepository<Pricing>().InsertAsync(pricing, cancellationToken);
-        await _unitOfWork.SaveChangesAsync();
-
-        _logger.LogInformation("Pricing created successfully with ID: {PricingId}, calculated price: {Price}", id, calculatedPrice);
-        return new DataServiceResponse<Guid> { Success = true, Message = "Pricing created successfully", Data = id };
+        var response = await _pricingService.CreatePricingRangeAsync(request, cancellationToken);
+        if (response.Success)
+            _logger.LogInformation("Created {Count} pricing entries for Field {FieldId} DayOfWeek {DayOfWeek}", response.Data.Count, request.FieldId, request.DayOfWeek);
+        else
+            _logger.LogWarning("Create pricing range failed: {Message}", response.Message);
+        return response;
     }
 }

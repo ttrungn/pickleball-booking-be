@@ -15,7 +15,7 @@ public class GetPricingByIdQueryValidator : AbstractValidator<GetPricingByIdQuer
 {
     public GetPricingByIdQueryValidator()
     {
-        RuleFor(x => x.Id).NotEmpty().WithMessage("Pricing ID is required!");
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Pricing Id is required");
     }
 }
 
@@ -35,11 +35,10 @@ public class GetPricingByIdQueryHandler : IRequestHandler<GetPricingByIdQuery, D
         var response = await _pricingService.GetPricingByIdAsync(request, cancellationToken);
         if (!response.Success)
         {
-            _logger.LogError("Failed to get pricing: {Message}", response.Message);
+            _logger.LogWarning("Pricing {PricingId} not found: {Message}", request.Id, response.Message);
             return response;
         }
-
-        _logger.LogInformation("Pricing retrieved successfully with ID: {PricingId}", request.Id);
+        _logger.LogInformation("Retrieved pricing {PricingId}", request.Id);
         return response;
     }
 }
