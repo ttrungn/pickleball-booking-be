@@ -102,35 +102,15 @@ public class BookingService : IBookingService
                 };
             }
             
-            // Get DayOfWeek from DateTime (0=Sunday, 6=Saturday)
-            var dayOfWeek = (int)command.Date.DayOfWeek;
-            var pricingQuery = _unitOfWork.GetRepository<Pricing>().Query()
-                .Where(pr => pr.FieldId == command.FieldId
-                             && command.TimeSlotIds.Contains(pr.TimeSlotId)
-                             && (int)pr.DayOfWeek == dayOfWeek);
-
-            if (!await pricingQuery.AnyAsync(cancellationToken))
-            {
-                return new DataServiceResponse<Guid>
-                {
-                    Success = false,
-                    Data = Guid.Empty,
-                    Message = $"No pricing found for field with ID {command.FieldId}."
-                };
-            }
-
-            var totalPrice = await pricingQuery.SumAsync(pr => pr.Price, cancellationToken);
-            
             var id = Guid.NewGuid();
             var booking = new Booking
             {
                 Id = id,
                 UserId = command.UserId,
                 FieldId = command.FieldId,
-                PaymentId = command.PaymentId,
                 Date = command.Date,
                 Status = BookingStatus.Pending,
-                TotalPrice = totalPrice,
+                TotalPrice = command.TotalPrice,
                 CreatedAt = DateTime.UtcNow
             };
             
