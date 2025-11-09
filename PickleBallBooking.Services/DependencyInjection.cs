@@ -52,5 +52,6 @@ public static class DependencyInjection
         builder.Services.AddScoped<ITimeSlotService, TimeSlotService>();
         builder.Services.AddScoped<IFieldTypeService, FieldTypeService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
+        builder.Services.AddScoped<IDashboardService, DashboardService>();  
     }
 }

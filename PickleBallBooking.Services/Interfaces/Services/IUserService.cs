@@ -9,4 +9,5 @@ public interface IUserService
 {
     Task<BaseServiceResponse> UpdateUserProfileAsync(UpdateUserProfileCommand command, CancellationToken token = default);
     Task<PaginatedServiceResponse<GetUserResponse>> GetAllUsersAsync(GetAllUsersQuery query, CancellationToken token = default);
+    Task<BaseServiceResponse> ChangeUserStatusAsync(string userId, bool isActive, CancellationToken token = default);
 }

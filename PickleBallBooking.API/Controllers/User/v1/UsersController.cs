@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using PickleBallBooking.API.Mappers;
 using PickleBallBooking.Domain.Constants;
 using PickleBallBooking.Repositories.Repositories.Contexts;
+using PickleBallBooking.Services.Users.Commands.ChangeUserStatus;
 using PickleBallBooking.Services.Users.Commands.UpdateUserProfile;
 using PickleBallBooking.Services.Users.Queries.GetUserProfile;
 using PickleBallBooking.Services.Users.Queries.GetAllUsers;
@@ -88,4 +89,22 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("{userId}/status")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<IActionResult> ChangeUserStatus(
+        ChangeUserStatusCommand command,
+        CancellationToken cancellationToken = default)
+    {
+      
+        var response = await _sender.Send(command, cancellationToken);
+
+        if (!response.Success)
+        {
+            return BadRequest(response.ToBaseApiResponse());
+        }
+
+        return Ok(response.ToBaseApiResponse());
+    }
+
 }
+
