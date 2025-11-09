@@ -31,6 +31,8 @@ public class PricingConfiguration : IEntityTypeConfiguration<Pricing>
             .HasPrecision(10, 2)
             .IsRequired();
 
+
+
         builder.ConfigureAuditableEntity();
 
         // Relationships

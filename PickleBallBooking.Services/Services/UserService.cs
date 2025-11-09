@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PickleBallBooking.Domain.Constants;
 using PickleBallBooking.Repositories.Interfaces.Repositories;
 using PickleBallBooking.Repositories.Repositories.Contexts;
@@ -15,11 +16,13 @@ public class UserService : IUserService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork)
+    public UserService(UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<UserService> logger)
     {
         _userManager = userManager;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<BaseServiceResponse> UpdateUserProfileAsync(UpdateUserProfileCommand command, CancellationToken token = default)
@@ -117,5 +120,83 @@ public class UserService : IUserService
             TotalCount = totalCount,
             TotalPages = totalPages
         };
+    }
+
+    public async Task<BaseServiceResponse> ChangeUserStatusAsync(string userId, bool isActive, CancellationToken token = default)
+    {
+        try
+        {
+            _logger.LogInformation("Changing user status for UserId={UserId}, IsActive={IsActive}", userId, isActive);
+
+            // Find the user
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("User not found with UserId={UserId}", userId);
+                return new BaseServiceResponse
+                {
+                    Success = false,
+                    Message = "User not found"
+                };
+            }
+
+            // Check if user is a customer
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains(Roles.Customer))
+            {
+                _logger.LogWarning("Attempted to change status for non-customer user. UserId={UserId}, Roles={Roles}",
+                    userId, string.Join(", ", roles));
+                return new BaseServiceResponse
+                {
+                    Success = false,
+                    Message = "Can only change status for customer accounts"
+                };
+            }
+
+            // Update user status (LockoutEnabled = !IsActive means user is locked when not active)
+            user.LockoutEnabled = !isActive;
+
+            // If deactivating, set lockout end date to far future
+            // If activating, clear lockout end date
+            if (!isActive)
+            {
+                user.LockoutEnd = DateTimeOffset.MaxValue;
+            }
+            else
+            {
+                user.LockoutEnd = null;
+            }
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Failed to update user status. UserId={UserId}, Errors={Errors}",
+                    userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return new BaseServiceResponse
+                {
+                    Success = false,
+                    Message = "Failed to update user status: " + string.Join(", ", result.Errors.Select(e => e.Description))
+                };
+            }
+
+            _logger.LogInformation("Successfully changed user status. UserId={UserId}, NewStatus={IsActive}",
+                userId, isActive ? "Active" : "Inactive");
+
+            return new BaseServiceResponse
+            {
+                Success = true,
+                Message = $"User status successfully changed to {(isActive ? "active" : "inactive")}"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while changing user status for UserId={UserId}", userId);
+            return new BaseServiceResponse
+            {
+                Success = false,
+                Message = "An error occurred while changing user status"
+            };
+        }
     }
 }

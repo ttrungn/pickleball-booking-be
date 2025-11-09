@@ -96,7 +96,9 @@ public class BookingController : ControllerBase
             Status = request.Status,
             IsActive = request.IsActive,
             PageNumber = request.PageNumber,
-            PageSize = request.PageSize
+            PageSize = request.PageSize,
+            Email = request.Email,
+            Date = request.Date
         };
 
         var result = await _sender.Send(query, cancellationToken);

@@ -10,9 +10,9 @@ namespace PickleBallBooking.Services.Features.Bookings.Commands.CreateBooking;
 public record CreateBookingCommand : IRequest<DataServiceResponse<Guid>>
 {
     public Guid FieldId { get; init; }
-    public Guid? PaymentId { get; init; }    
     public DateOnly Date { get; init; }
     public List<Guid> TimeSlotIds { get; init; } = new();
+    public decimal TotalPrice { get; init; }
     [JsonIgnore]
     public string? UserId { get; init; }
 }
@@ -29,6 +29,8 @@ public class CreateBookingValidator : AbstractValidator<CreateBookingCommand>
             .WithMessage("Booking date must be today or in the future!");
         RuleFor(x => x.TimeSlotIds)
             .NotEmpty().WithMessage("At least one time slot must be selected!");
+        RuleFor(x => x.TotalPrice)
+            .GreaterThan(0).WithMessage("Total price must be greater than 0!");
     }
 }
 

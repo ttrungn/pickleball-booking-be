@@ -41,20 +41,8 @@ public class PaymentService : IPaymentService
 
     public async Task<DataServiceResponse<MomoCreatePaymentResponse?>> CreatePaymentWithMomo(GetMomoPaymentUrlQuery request)
     {
-        //var amount = await GetBookingTotalPrice(request.BookingId);
-
-         
-        var amount = 10000; // For testing purpose
-
-        if (amount == 0)
-        {
-            return new DataServiceResponse<MomoCreatePaymentResponse?>
-            {
-                Message = $"Booking not found or booking price is 0 BookingId {request.BookingId}",
-                Success = false,
-                Data = null!,
-            };
-        }
+     
+        var amount = await GetBookingTotalPrice(request.BookingId);
 
         var momoRequest = request.ToMomoOneTimePayment(_momoSettings, (long)amount);
 
@@ -149,12 +137,27 @@ public class PaymentService : IPaymentService
 
     private async Task<long> GetBookingTotalPrice(Guid bookingId)
     {
-        var query =  _unitOfWork.GetRepository<Booking>();
-        var booking = await query.FindAsync(bookingId);
+        var bookingRepo =  _unitOfWork.GetRepository<Booking>();
+        var booking = await bookingRepo.Query()
+            .Where(b => b.Id == bookingId).FirstOrDefaultAsync();
         if(booking == null)
         {
+            _logger.LogError("Booking not found for bookingId {bookingId}", bookingId);
+            return 0;
+        }   
+        
+        if(booking.Status != BookingStatus.Pending)
+        {
+            _logger.LogError("Booking status is not pending for bookingId {bookingId}", bookingId);
             return 0;
         }
+        
+        if(booking.TotalPrice <= 0)
+        {
+            _logger.LogError("Booking total price is invalid for bookingId {bookingId}", bookingId);
+            return 0;
+        }
+
         return (long)booking.TotalPrice;
 
 

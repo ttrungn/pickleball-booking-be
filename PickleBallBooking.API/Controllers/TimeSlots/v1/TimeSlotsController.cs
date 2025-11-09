@@ -7,6 +7,7 @@ using PickleBallBooking.Services.Features.TimeSlots.Commands.DeleteTimeSlot;
 using PickleBallBooking.Services.Features.TimeSlots.Commands.UpdateTimeSlot;
 using PickleBallBooking.Services.Features.TimeSlots.Queries.GetTimeSlotById;
 using PickleBallBooking.Services.Features.TimeSlots.Queries.GetTimeSlots;
+using PickleBallBooking.Services.Features.TimeSlots.Queries.GetTimeSlotsByFieldAndDate;
 using PickleBallBooking.Services.Models.Requests;
 
 namespace PickleBallBooking.API.Controllers.TimeSlots.v1;
@@ -90,5 +91,23 @@ public class TimeSlotsController
 
         return Results.BadRequest(result.ToPaginatedApiResponse());
     }
-}
 
+    [HttpGet("fields/{fieldId:guid}")]
+    public async Task<IResult> GetTimeSlotsByFieldAndDateAsync(
+        [FromRoute] Guid fieldId,
+        [FromQuery] DateOnly date,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetTimeSlotsByFieldAndDateQuery
+        {
+            FieldId = fieldId,
+            Date = date
+        };
+
+        var result = await _sender.Send(query, cancellationToken);
+        if (result.Success)
+            return Results.Ok(result.ToDataApiResponse());
+
+        return Results.NotFound(result.ToDataApiResponse());
+    }
+}
